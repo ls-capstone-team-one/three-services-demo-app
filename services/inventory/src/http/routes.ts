@@ -13,7 +13,7 @@ export function buildRoutes(store: InventoryStore): Router {
     if (typeof sku !== "string" || typeof quantity !== "number") {
       res
         .status(400)
-        .json({ error: "sky (string) and quantity (number) required" });
+        .json({ error: "sku (string) and quantity (number) required" });
 
       return;
     }
