@@ -20,8 +20,12 @@ export function buildRoutes(store: InventoryStore): Router {
 
     const result = reserve(store.get(sku), quantity);
     if (!result.ok) {
-      const status = result.reason === "unknown_sku" ? 404 : 409;
-
+      const status =
+        result.reason === "unknown_sku"
+          ? 404
+          : result.reason === "invalid_quantity"
+            ? 400
+            : 409;
       res.status(status).json({ error: result.reason });
 
       return;
