@@ -13,6 +13,16 @@ export type Order = {
   status: "created";
 };
 
+// GET /orders/:id is intentionally synthetic — there is no order
+// persistence in this demo. The endpoint exists so the gateway has
+// something realistic to forward to. Different shape from Order is
+// load-bearing, not an oversight.
+export type SyntheticOrderSummary = {
+  orderId: string;
+  type: OrderType;
+  status: "completed";
+};
+
 export type ReserveFailureReason =
   | "insufficient"
   | "unknown_sku"

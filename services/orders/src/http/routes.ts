@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
   InventoryClient,
+  Order,
+  SyntheticOrderSummary,
   generateOrderId,
   pickOrderType,
 } from "../domain/orders";
@@ -42,21 +44,23 @@ export function buildRoutes(inventory: InventoryClient): Router {
       return;
     }
 
-    res.json({
+    const order: Order = {
       orderId: generateOrderId(),
       sku,
       quantity,
       type: pickOrderType(),
       status: "created",
-    });
+    };
+    res.json(order);
   });
 
   router.get("/orders/:id", (req, res) => {
-    res.json({
+    const summary: SyntheticOrderSummary = {
       orderId: req.params.id,
       type: pickOrderType(),
       status: "completed",
-    });
+    };
+    res.json(summary);
   });
 
   return router;
