@@ -10,7 +10,7 @@ import {
 export function buildRoutes(inventory: InventoryClient): Router {
   const router = Router();
 
-  router.get("/healthz", (_req, res) => {
+  router.get("/health", (_req, res) => {
     res.status(200).send("ok");
   });
 
