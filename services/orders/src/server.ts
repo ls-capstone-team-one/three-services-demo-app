@@ -9,7 +9,9 @@ if (!inventoryUrl) {
   process.exit(1);
 }
 
-const inventory = new HttpInventoryClient(inventoryUrl);
+const inventoryTimeoutMs = Number(process.env.INVENTORY_TIMEOUT_MS ?? 5000);
+
+const inventory = new HttpInventoryClient(inventoryUrl, inventoryTimeoutMs);
 
 const app = express();
 app.use(express.json());

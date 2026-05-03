@@ -1,13 +1,17 @@
 import { InventoryClient, ReserveResponse } from "../domain/orders";
 
 export class HttpInventoryClient implements InventoryClient {
-  constructor(private readonly baseUrl: string) {}
+  constructor(
+    private readonly baseUrl: string,
+    private readonly timeoutMs: number = 5000,
+  ) {}
 
   async reserve(sku: string, quantity: number): Promise<ReserveResponse> {
     const res = await fetch(`${this.baseUrl}/inventory/reserve`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sku, quantity }),
+      signal: AbortSignal.timeout(this.timeoutMs),
     });
 
     if (res.ok) {
