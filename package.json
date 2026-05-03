@@ -1,0 +1,20 @@
+{
+  "name": "capstone-demo-observed-app",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n gateway,inventory -c blue,green \"npm:dev:gateway\" \"npm:dev:inventory\"",
+    "dev:gateway": "npm --workspace gateway run dev",
+    "dev:inventory": "npm --workspace inventory run dev",
+    "build": "npm run build --workspaces",
+    "test": "npm test --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.3"
+  }
+}
