@@ -6,8 +6,9 @@
     "services/*"
   ],
   "scripts": {
-    "dev": "concurrently -n gateway,inventory -c blue,green \"npm:dev:gateway\" \"npm:dev:inventory\"",
+    "dev": "concurrently -n gateway,orders,inventory -c blue,yellow,green \"npm:dev:gateway\" \"npm:dev:orders\" \"npm:dev:inventory\"",
     "dev:gateway": "npm --workspace gateway run dev",
+    "dev:orders": "npm --workspace orders run dev",
     "dev:inventory": "npm --workspace inventory run dev",
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
