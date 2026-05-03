@@ -1,8 +1,13 @@
 import { generateOrderId, pickOrderType } from "../src/domain/orders";
 
 describe("orders.generateOrderId", () => {
-  test("formats as ord-<timestamp>", () => {
-    expect(generateOrderId(() => 12345)).toBe("ord-12345");
+  test("formats as ord-<timestamp>-<suffix>", () => {
+    expect(
+      generateOrderId(
+        () => 12345,
+        () => "abc123",
+      ),
+    ).toBe("ord-12345-abc123");
   });
 });
 

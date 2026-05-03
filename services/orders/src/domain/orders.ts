@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 export type OrderType = "standard" | "express" | "bulk";
 
 export type OrderRequest = {
@@ -42,8 +44,11 @@ const ORDER_TYPES: readonly OrderType[] = [
   "bulk",
 ] as const;
 
-export function generateOrderId(now: () => number = Date.now): string {
-  return `ord-${now()}`;
+export function generateOrderId(
+  now: () => number = Date.now,
+  suffix: () => string = () => randomBytes(3).toString("hex"),
+): string {
+  return `ord-${now()}-${suffix()}`;
 }
 
 export function pickOrderType(random: () => number = Math.random): OrderType {
