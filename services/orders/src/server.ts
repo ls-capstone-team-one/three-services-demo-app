@@ -21,9 +21,17 @@ const server = app.listen(port, () => {
   console.log(`orders listening on: ${port}`);
 });
 
+const SHUTDOWN_TIMEOUT_MS = 10000;
 const shutdown = (signal: string) => {
   console.log(`received ${signal}, shutting down`);
-  server.close(() => process.exit(0));
+  const timer = setTimeout(() => {
+    console.error("shutdown timed out, forcing exit");
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+  server.close(() => {
+    clearTimeout(timer);
+    process.exit(0);
+  });
 };
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
