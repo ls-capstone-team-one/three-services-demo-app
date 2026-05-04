@@ -18,8 +18,7 @@ const sdk = new NodeSDK({
 });
 
 sdk.start();
-console.log(`OTel SDK started for service:               
-  ${serviceName}`);
+console.log(`OTel SDK started for service: ${serviceName}`);
 
 export async function shutdownTelemetry(): Promise<void> {
   await sdk.shutdown();

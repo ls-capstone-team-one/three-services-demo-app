@@ -11,8 +11,7 @@ function readEnvInt(name: string, defaultValue: number): number {
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) {
     console.error(
-      `Invalid ${name}: ${JSON.stringify(raw)} (must be a
-  positive integer)`,
+      `Invalid ${name}: ${JSON.stringify(raw)} (must be a positive integer)`,
     );
     process.exit(1);
   }
