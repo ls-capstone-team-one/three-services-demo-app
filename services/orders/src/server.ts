@@ -1,3 +1,6 @@
+import "./infra/telemetry";
+import { shutdownTelemetry } from "./infra/telemetry";
+
 import express from "express";
 import { HttpInventoryClient } from "./infra/httpInventoryClient";
 import { buildRoutes } from "./http/routes";
@@ -40,8 +43,9 @@ const shutdown = (signal: string) => {
     console.error("shutdown timed out, forcing exit");
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS);
-  server.close(() => {
+  server.close(async () => {
     clearTimeout(timer);
+    await shutdownTelemetry();
     process.exit(0);
   });
 };
