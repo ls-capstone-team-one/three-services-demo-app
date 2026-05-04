@@ -2,7 +2,20 @@ import express from "express";
 import { InMemoryInventoryStore, seed } from "./infra/inventoryStore";
 import { buildRoutes } from "./http/routes";
 
-const port = Number(process.env.PORT ?? 3001);
+function readEnvInt(name: string, defaultValue: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return defaultValue;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    console.error(
+      `Invalid ${name}: ${JSON.stringify(raw)} (must be a positive integer)`,
+    );
+    process.exit(1);
+  }
+  return n;
+}
+
+const port = readEnvInt("PORT", 3001);
 
 const store = new InMemoryInventoryStore();
 seed(store);

@@ -2,14 +2,27 @@ import express from "express";
 import { HttpOrdersClient } from "./infra/httpOrdersClient";
 import { buildRoutes } from "./http/routes";
 
-const port = Number(process.env.PORT ?? 3000);
+function readEnvInt(name: string, defaultValue: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return defaultValue;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    console.error(
+      `Invalid ${name}: ${JSON.stringify(raw)} (must be a positive integer)`,
+    );
+    process.exit(1);
+  }
+  return n;
+}
+
+const port = readEnvInt("PORT", 3000);
 const ordersUrl = process.env.ORDERS_URL;
 if (!ordersUrl) {
   console.error("ORDERS_URL is required");
   process.exit(1);
 }
 
-const ordersTimeoutMs = Number(process.env.ORDERS_TIMEOUT_MS ?? 5000);
+const ordersTimeoutMs = readEnvInt("ORDERS_TIMEOUT_MS", 5000);
 const orders = new HttpOrdersClient(ordersUrl, ordersTimeoutMs);
 
 const app = express();
