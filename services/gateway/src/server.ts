@@ -1,5 +1,5 @@
 import express from "express";
-import { InMemoryInventoryStore, seed } from "./infra/inventoryStore";
+import { HttpOrdersClient } from "./infra/httpOrdersClient";
 import { buildRoutes } from "./http/routes";
 
 function readEnvInt(name: string, defaultValue: number): number {
@@ -15,17 +15,22 @@ function readEnvInt(name: string, defaultValue: number): number {
   return n;
 }
 
-const port = readEnvInt("PORT", 3001);
+const port = readEnvInt("PORT", 3000);
+const ordersUrl = process.env.ORDERS_URL;
+if (!ordersUrl) {
+  console.error("ORDERS_URL is required");
+  process.exit(1);
+}
 
-const store = new InMemoryInventoryStore();
-seed(store);
+const ordersTimeoutMs = readEnvInt("ORDERS_TIMEOUT_MS", 5000);
+const orders = new HttpOrdersClient(ordersUrl, ordersTimeoutMs);
 
 const app = express();
 app.use(express.json());
-app.use(buildRoutes(store));
+app.use(buildRoutes(orders));
 
 const server = app.listen(port, () => {
-  console.log(`inventory listening on: ${port}`);
+  console.log(`gateway listening on: ${port}`);
 });
 
 const SHUTDOWN_TIMEOUT_MS = 10000;

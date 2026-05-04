@@ -2,14 +2,26 @@ import express from "express";
 import { HttpInventoryClient } from "./infra/httpInventoryClient";
 import { buildRoutes } from "./http/routes";
 
-const port = Number(process.env.PORT ?? 3002);
+function readEnvInt(name: string, defaultValue: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return defaultValue;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) {
+    console.error(
+      `Invalid ${name}: ${JSON.stringify(raw)} (must be a positive integer)`,
+    );
+    process.exit(1);
+  }
+  return n;
+}
+
+const port = readEnvInt("PORT", 3002);
 const inventoryUrl = process.env.INVENTORY_URL;
 if (!inventoryUrl) {
   console.error("INVENTORY_URL is required");
   process.exit(1);
 }
-
-const inventoryTimeoutMs = Number(process.env.INVENTORY_TIMEOUT_MS ?? 5000);
+const inventoryTimeoutMs = readEnvInt("INVENTORY_TIMEOUT_MS", 5000);
 
 const inventory = new HttpInventoryClient(inventoryUrl, inventoryTimeoutMs);
 
@@ -21,9 +33,17 @@ const server = app.listen(port, () => {
   console.log(`orders listening on: ${port}`);
 });
 
+const SHUTDOWN_TIMEOUT_MS = 10000;
 const shutdown = (signal: string) => {
   console.log(`received ${signal}, shutting down`);
-  server.close(() => process.exit(0));
+  const timer = setTimeout(() => {
+    console.error("shutdown timed out, forcing exit");
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+  server.close(() => {
+    clearTimeout(timer);
+    process.exit(0);
+  });
 };
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
