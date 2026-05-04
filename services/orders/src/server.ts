@@ -1,3 +1,6 @@
+import "./infra/telemetry";
+import { shutdownTelemetry } from "./infra/telemetry";
+
 import express from "express";
 import { HttpInventoryClient } from "./infra/httpInventoryClient";
 import { buildRoutes } from "./http/routes";
@@ -8,7 +11,8 @@ function readEnvInt(name: string, defaultValue: number): number {
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) {
     console.error(
-      `Invalid ${name}: ${JSON.stringify(raw)} (must be a positive integer)`,
+      `Invalid ${name}: ${JSON.stringify(raw)} (must be a
+  positive integer)`,
     );
     process.exit(1);
   }
@@ -40,8 +44,9 @@ const shutdown = (signal: string) => {
     console.error("shutdown timed out, forcing exit");
     process.exit(1);
   }, SHUTDOWN_TIMEOUT_MS);
-  server.close(() => {
+  server.close(async () => {
     clearTimeout(timer);
+    await shutdownTelemetry();
     process.exit(0);
   });
 };
