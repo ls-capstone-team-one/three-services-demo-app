@@ -14,9 +14,7 @@ export function buildRoutes(orders: OrdersClient): Router {
       res.status(upstream.status).json(upstream.body);
     } catch (err) {
       console.error("orders upstream failed:", err);
-      res
-        .status(502)
-        .json({ error: "orders_unavailable", detail: String(err) });
+      res.status(502).json({ error: "orders_unavailable" });
     }
   });
 
@@ -26,9 +24,7 @@ export function buildRoutes(orders: OrdersClient): Router {
       res.status(upstream.status).json(upstream.body);
     } catch (err) {
       console.error("orders upstream failed:", err);
-      res
-        .status(502)
-        .json({ error: "orders_unavailable", detail: String(err) });
+      res.status(502).json({ error: "orders_unavailable" });
     }
   });
 

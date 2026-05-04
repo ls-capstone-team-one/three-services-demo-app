@@ -27,9 +27,8 @@ export function buildRoutes(inventory: InventoryClient): Router {
     try {
       reservation = await inventory.reserve(sku, quantity);
     } catch (err) {
-      res
-        .status(502)
-        .json({ error: "inventory_unavailable", detail: String(err) });
+      console.error("inventory upstream failed:", err);
+      res.status(502).json({ error: "inventory_unavailable" });
       return;
     }
 
