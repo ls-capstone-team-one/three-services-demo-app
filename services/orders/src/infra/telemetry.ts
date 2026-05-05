@@ -15,7 +15,9 @@ if (!apiKey) {
 }
 
 const exporter = new OTLPTraceExporter({
-  url: "https://api.honeycomb.io/v1/traces",
+  url:
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ??
+    "https://api.honeycomb.io/v1/traces",
   headers: {
     "x-honeycomb-team": apiKey,
   },
