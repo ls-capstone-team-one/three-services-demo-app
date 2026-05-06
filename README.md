@@ -4,7 +4,7 @@ A small, deliberately observable application built as the **demo target** for ou
 
 ## What this is and why it exists
 
-The investigation agent needs something to investigate. This repo is that "something"; three TypeScript microservices that emit OpenTelemetry traces to Honeycomb, with realistic failure modes built in (and more coming via a configurable fault-injection layer). When we demo the agent, we point it at this app's incidents.
+The investigation agent needs something to investigate. This repo is that "something"; three TypeScript microservices that emit OpenTelemetry traces to Honeycomb, with realistic failure modes built in (and more coming via a configurable fault-injection layer). When we demo the agent, we can point it at this app's incidents.
 
 ## Why this app provides a useful demo target
 
@@ -18,7 +18,7 @@ The investigation agent needs something to investigate. This repo is that "somet
 
 5. **Reproducible incidents on the way.** Planned fault-injection middleware will let us produce specific failure scenarios on demand for the demo. Honest services in the production code; controlled chaos at the boundary.
 
-6. **Industry-standard observability stack.** OTel + Honeycomb is what the agent will see in real customer environments. Practicing on real tooling, not a toy.
+6. **Industry-standard observability stack.** OTel + Honeycomb is what the agent will see in real customer environments.
 
 ## Architecture
 
@@ -58,9 +58,9 @@ the agent can walk top-down.
 | Service: orders                    | shipped  |
 | Service: gateway                   | shipped  |
 | OTel SDK in each service           | shipped  |
-| OTel → Honeycomb (sub-phase C)     | next     |
-| Wide span attributes (sub-phase D) | planned  |
-| Fault injection layer              | planned  |
+| OTel → Honeycomb (sub-phase C)     | shipped  |
+| Wide span attributes (sub-phase D) | shipped  |
+| Fault injection layer              | next     |
 | Load generator                     | planned  |
 | Dockerization                      | deferred |
 | Terraform / deployment             | deferred |
@@ -74,6 +74,24 @@ the agent can walk top-down.
 | **inventory** | 3001 | Stock authority. Tracks SKU quantities in memory. Validates reservation requests and rejects with typed reasons (`unknown_sku`, `insufficient`, `invalid_quantity`).                        |
 
 All three follow the same hexagonal layout (`domain/`, `infra/`, `http/`).
+
+## Prerequisites
+
+You need a Honeycomb Ingest API key, scoped to the environment you send traces to. Each service reads it from its own `.env`:
+
+```
+services/gateway/.env
+services/orders/.env
+services/inventory/.env
+```
+
+Each file:
+
+```
+HONEYCOMB_API_KEY=<your env-scoped ingest key>`
+```
+
+`.env` is gitignored. The key is the same across all three services (Honeycomb routes per `service.name` into separate datasets).
 
 ## Running it locally
 
@@ -90,7 +108,7 @@ cd services/orders && INVENTORY_URL=http://localhost:3001 npm run dev
 cd services/gateway && ORDERS_URL=http://localhost:3002 npm run dev
 ```
 
-Each prints `OTel SDK started for service: <name>` at startup, then logs spans to its own stdout when requests arrive.
+Each prints `OTel SDK started for service: <name>` at startup.
 
 Smoke test (gateway → orders → inventory):
 
@@ -104,8 +122,6 @@ A single curl produces spans across all three terminals sharing one `traceId`.
 
 ## What's coming
 
-- **Sub-phase C:** Replace console exporter with Honeycomb's OTLP endpoint. Spans arrive in Honeycomb's UI as proper traces.
-- **Sub-phase D:** Add Majors-style wide span attributes (`sku`, `quantity`, `order.id`, `user.region`, etc.). This is what makes traces _investigable_, not just present.
 - **Fault injection middleware:** Header-triggered, off by default, producing realistic failure telemetry the agent can investigate.
 - **Loadgen:** Background traffic generator so we have continuous data flowing during demos.
 - **Dockerization:** `docker compose up` to run the full chain in one command. Comes when we add loadgen.
@@ -114,4 +130,4 @@ A single curl produces spans across all three terminals sharing one `traceId`.
 
 - Does the gateway → orders → inventory chain match what we want the agent to demo against, or do we want more services / different topology?
 
-- Do we want to develop fault scenarios collaboratively (i.e., what failures should the agent be good at investigating)?
+- Do we want to develop additional fault scenarios collaboratively (i.e., what failures should the agent be good at investigating)?
