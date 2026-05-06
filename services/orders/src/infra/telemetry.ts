@@ -4,6 +4,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { ExpressLayerType } from "@opentelemetry/instrumentation-express";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 
@@ -28,7 +29,20 @@ const sdk = new NodeSDK({
     [ATTR_SERVICE_NAME]: serviceName,
   }),
   spanProcessors: [new BatchSpanProcessor(exporter)],
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      "@opentelemetry/instrumentation-router": {
+        enabled: false,
+      },
+      "@opentelemetry/instrumentation-express": {
+        ignoreLayersType: [
+          ExpressLayerType.MIDDLEWARE,
+          ExpressLayerType.ROUTER,
+          ExpressLayerType.REQUEST_HANDLER,
+        ],
+      },
+    }),
+  ],
 });
 
 sdk.start();
