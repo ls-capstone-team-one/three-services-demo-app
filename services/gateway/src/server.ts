@@ -4,6 +4,8 @@ import { shutdownTelemetry } from "./infra/telemetry";
 import express from "express";
 import { HttpOrdersClient } from "./infra/httpOrdersClient";
 import { buildRoutes } from "./http/routes";
+import { headerToBaggage } from "./http/middleware/headerToBaggage";
+import { faultInjection } from "./http/middleware/faultInjection";
 
 function readEnvInt(name: string, defaultValue: number): number {
   const raw = process.env[name];
@@ -30,6 +32,8 @@ const orders = new HttpOrdersClient(ordersUrl, ordersTimeoutMs);
 
 const app = express();
 app.use(express.json());
+app.use(headerToBaggage());
+app.use(faultInjection());
 app.use(buildRoutes(orders));
 
 const server = app.listen(port, () => {

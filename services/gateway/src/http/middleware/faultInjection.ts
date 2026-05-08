@@ -1,0 +1,81 @@
+import { Request, Response, NextFunction } from "express";
+import { propagation, trace } from "@opentelemetry/api";
+
+const SERVICE_NAME = "gateway";
+const BAGGAGE_KEY = "fault.inject";
+const ENABLED = process.env.FAULT_INJECTION_ENABLED === "true";
+
+type FaultSpec =
+  | { mode: "latency"; valueMs: number }
+  | { mode: "error"; status: number };
+
+function parseSpec(raw: string): FaultSpec | null {
+  const colon = raw.indexOf(":");
+  if (colon === -1) return null;
+  const target = raw.slice(0, colon);
+  const rest = raw.slice(colon + 1);
+  if (target !== SERVICE_NAME) return null;
+
+  const eq = rest.indexOf("=");
+  if (eq === -1) return null;
+  const mode = rest.slice(0, eq);
+  const value = rest.slice(eq + 1);
+
+  if (mode === "latency") {
+    const ms = Number(value);
+    if (!Number.isFinite(ms) || ms < 0) return null;
+    return { mode: "latency", valueMs: ms };
+  }
+  if (mode === "error") {
+    const status = Number(value);
+    if (!Number.isInteger(status) || status < 100 || status > 599) return null;
+    return { mode: "error", status };
+  }
+  return null;
+}
+
+function readSpec(): { spec: FaultSpec; raw: string } | null {
+  if (!ENABLED) return null;
+  const baggage = propagation.getActiveBaggage();
+  if (!baggage) return null;
+  const entry = baggage.getEntry(BAGGAGE_KEY);
+  if (!entry) return null;
+  const spec = parseSpec(entry.value);
+  if (!spec) {
+    console.warn(`faultInjection: could not parse spec "${entry.value}"`);
+    return null;
+  }
+  return { spec, raw: entry.value };
+}
+
+function annotateSpan(raw: string, spec: FaultSpec): void {
+  const span = trace.getActiveSpan();
+  if (!span) return;
+  span.setAttributes({
+    "fault.injected": true,
+    "fault.spec": raw,
+    "fault.target": SERVICE_NAME,
+    "fault.mode": spec.mode,
+    "fault.value": spec.mode === "latency" ? spec.valueMs : spec.status,
+  });
+}
+
+export function faultInjection() {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const found = readSpec();
+    if (!found) return next();
+    const { spec, raw } = found;
+
+    annotateSpan(raw, spec);
+
+    if (spec.mode === "latency") {
+      await new Promise((resolve) => setTimeout(resolve, spec.valueMs));
+      return next();
+    }
+
+    res.status(spec.status).json({
+      error: "fault_injected",
+      spec: raw,
+    });
+  };
+}

@@ -4,6 +4,7 @@ import { shutdownTelemetry } from "./infra/telemetry";
 import express from "express";
 import { InMemoryInventoryStore, seed } from "./infra/inventoryStore";
 import { buildRoutes } from "./http/routes";
+import { faultInjection } from "./http/middleware/faultInjection";
 
 function readEnvInt(name: string, defaultValue: number): number {
   const raw = process.env[name];
@@ -25,6 +26,7 @@ seed(store);
 
 const app = express();
 app.use(express.json());
+app.use(faultInjection());
 app.use(buildRoutes(store));
 
 const server = app.listen(port, () => {

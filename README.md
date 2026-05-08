@@ -60,7 +60,7 @@ the agent can walk top-down.
 | OTel SDK in each service           | shipped  |
 | OTel → Honeycomb (sub-phase C)     | shipped  |
 | Wide span attributes (sub-phase D) | shipped  |
-| Fault injection layer              | next     |
+| Fault injection layer              | shipped  |
 | Load generator                     | planned  |
 | Dockerization                      | deferred |
 | Terraform / deployment             | deferred |
@@ -85,11 +85,16 @@ services/orders/.env
 services/inventory/.env
 ```
 
-Each file:
+Quickest setup: each service ships a `.env.example` you can copy:
 
+```bash
+ cp services/gateway/.env.example services/gateway/.env
+ cp services/orders/.env.example services/orders/.env
+ cp services/inventory/.env.example services/inventory/.env
 ```
-HONEYCOMB_API_KEY=<your env-scoped ingest key>`
-```
+
+Then fill in `HONEYCOMB_API_KEY` in each. The other variables have working  
+localhost defaults. Set `FAULT_INJECTION_ENABLED=true` (commented in the example) to enable the opt-in fault layer
 
 `.env` is gitignored. The key is the same across all three services (Honeycomb routes per `service.name` into separate datasets).
 
