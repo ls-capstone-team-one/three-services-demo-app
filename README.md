@@ -1,4 +1,4 @@
-# capstone-demo-observed-app
+# three-services-demo-app
 
 A small, deliberately observable application built as the **demo target** for our team's incident-investigation agent. It is _not_ the agent itself.
 
