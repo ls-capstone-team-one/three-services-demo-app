@@ -4,6 +4,7 @@ import { shutdownTelemetry } from "./infra/telemetry";
 import express from "express";
 import { HttpInventoryClient } from "./infra/httpInventoryClient";
 import { buildRoutes } from "./http/routes";
+import { faultInjection } from "./http/middleware/faultInjection";
 
 function readEnvInt(name: string, defaultValue: number): number {
   const raw = process.env[name];
@@ -30,6 +31,7 @@ const inventory = new HttpInventoryClient(inventoryUrl, inventoryTimeoutMs);
 
 const app = express();
 app.use(express.json());
+app.use(faultInjection());
 app.use(buildRoutes(inventory));
 
 const server = app.listen(port, () => {

@@ -7,6 +7,11 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { ExpressLayerType } from "@opentelemetry/instrumentation-express";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+import {
+  CompositePropagator,
+  W3CTraceContextPropagator,
+  W3CBaggagePropagator,
+} from "@opentelemetry/core";
 
 const serviceName = process.env.OTEL_SERVICE_NAME ?? "gateway";
 
@@ -29,6 +34,9 @@ const sdk = new NodeSDK({
     [ATTR_SERVICE_NAME]: serviceName,
   }),
   spanProcessors: [new BatchSpanProcessor(exporter)],
+  textMapPropagator: new CompositePropagator({
+    propagators: [new W3CTraceContextPropagator(), new W3CBaggagePropagator()],
+  }),
   instrumentations: [
     getNodeAutoInstrumentations({
       "@opentelemetry/instrumentation-router": {
