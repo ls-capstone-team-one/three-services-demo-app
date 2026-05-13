@@ -61,7 +61,7 @@ the agent can walk top-down.
 | OTel → Honeycomb (sub-phase C)     | shipped  |
 | Wide span attributes (sub-phase D) | shipped  |
 | Fault injection layer              | shipped  |
-| Load generator                     | planned  |
+| Load generator                     | shipped  |
 | Dockerization                      | deferred |
 | Terraform / deployment             | deferred |
 
@@ -91,6 +91,7 @@ Quickest setup: each service ships a `.env.example` you can copy:
  cp services/gateway/.env.example services/gateway/.env
  cp services/orders/.env.example services/orders/.env
  cp services/inventory/.env.example services/inventory/.env
+ cp services/loadgen/.env.example services/loadgen/.env
 ```
 
 Then fill in `HONEYCOMB_API_KEY` in each. The other variables have working  
@@ -125,14 +126,22 @@ curl -s -X POST http://localhost:3000/api/orders \
 
 A single curl produces spans across all three terminals sharing one `traceId`.
 
+## Generating traffic
+
+Loadgen is an auxiliary service (not part of the three-service demo target) that sends a continuous mix of requests through the gateway. It's a separate `npm` script so you can turn traffic on deliberately. `npm run dev` does **not** start it.
+
+```bash
+# in a fourth terminal, after the services are up:
+cd services/loadgen && GATEWAY_URL=http://localhost:3000 npm run dev
+
+# OR from the repo root:
+npm run dev:loadgen
+```
+
+Loadgen emits its own OTel spans (`service.name=loadgen`) as the root of each trace, so in Honeycomb you'll see traces that begin at loadgen and propagate through `gateway → orders → inventory`.
+
+Traffic mix is 70% `POST /api/orders` (with random SKU + quantity) and 30% `GET /api/orders/ord-{N}`. Rate is configurable via `REQUESTS_PER_SECOND` (default 1).
+
 ## What's coming
 
-- **Fault injection middleware:** Header-triggered, off by default, producing realistic failure telemetry the agent can investigate.
-- **Loadgen:** Background traffic generator so we have continuous data flowing during demos.
-- **Dockerization:** `docker compose up` to run the full chain in one command. Comes when we add loadgen.
-
-## Open questions for the team
-
-- Does the gateway → orders → inventory chain match what we want the agent to demo against, or do we want more services / different topology?
-
-- Do we want to develop additional fault scenarios collaboratively (i.e., what failures should the agent be good at investigating)?
+- **Dockerization:** `docker compose up` to run the full chain in one command.
