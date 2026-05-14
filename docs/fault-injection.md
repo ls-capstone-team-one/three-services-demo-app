@@ -1,7 +1,6 @@
 # Fault injection
 
-The agent we're building investigates incidents in distributed traces. To rehearse against it we need _reproducible_ incidents, but we don't want to put engineered failure modes in the production code paths, because then the demo stops being a demo of real problems. The
-fault-injection layer resolves that tension: production code stays honest, controlled chaos lives in a thin opt-in layer at each service's HTTP boundary.
+The agent we're building investigates incidents in distributed traces. To rehearse against it, we need _reproducible_ incidents, but we don't want to put engineered failure modes in the production code paths, because then the demo stops being a demo of real problems. The fault-injection layer resolves that tension: production code stays honest, controlled chaos lives in a thin opt-in layer at each service's HTTP boundary.
 
 **When disabled (the default), it is a no-op.** Services behave exactly as they would in any environment.
 
@@ -100,7 +99,7 @@ Suggested rotation for a first round of agent evaluation:
 
 ## Limitations
 
-- **One fault per request.** Single header, single baggage entry,single spec.
-- **No compound faults** (`inventory:latency=2000 ,inventory:error=503` — slow _and_ error in one request). Tracked for v2; would need parser changes and a multi-fault execution model.
+- **One fault per request.** Single header, single baggage entry, single spec.
+- **No compound faults** (`inventory:latency=2000,inventory:error=503` — slow _and_ error in one request). Tracked for v2; would need parser changes and a multi-fault execution model.
 - **No probabilistic faults** (`inventory:error=503@0.1` — fail 10% of the time). The _caller_ can produce probabilistic mixes by attaching the header to a fraction of their requests.
 - **No timeout / hang / malformed-payload modes.** Tracked for v2.

@@ -128,7 +128,7 @@ A single curl produces spans across all three terminals sharing one `traceId`.
 
 ## Generating traffic
 
-Loadgen is an auxiliary service (not part of the three-service demo target) that drives continuous, _mostly successful_ traffic throught the gateway service. It's a separate `npm` script so you can turn traffic on deliberately. `npm run dev` does **not** start it.
+Loadgen is an auxiliary service (not part of the three-service demo target) that drives continuous, _mostly successful_ traffic through the gateway service. It's a separate `npm` script so you can turn traffic on deliberately. `npm run dev` does **not** start it.
 
 ```bash
 # in a fourth terminal, after the services are up:
