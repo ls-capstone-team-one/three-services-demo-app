@@ -128,7 +128,7 @@ A single curl produces spans across all three terminals sharing one `traceId`.
 
 ## Generating traffic
 
-Loadgen is an auxiliary service (not part of the three-service demo target) that sends a continuous mix of requests through the gateway. It's a separate `npm` script so you can turn traffic on deliberately. `npm run dev` does **not** start it.
+Loadgen is an auxiliary service (not part of the three-service demo target) that drives continuous, _mostly successful_ traffic throught the gateway service. It's a separate `npm` script so you can turn traffic on deliberately. `npm run dev` does **not** start it.
 
 ```bash
 # in a fourth terminal, after the services are up:
@@ -138,9 +138,20 @@ cd services/loadgen && GATEWAY_URL=http://localhost:3000 npm run dev
 npm run dev:loadgen
 ```
 
-Loadgen emits its own OTel spans (`service.name=loadgen`) as the root of each trace, so in Honeycomb you'll see traces that begin at loadgen and propagate through `gateway → orders → inventory`.
+### What loadgen does
 
-Traffic mix is 70% `POST /api/orders` (with random SKU + quantity) and 30% `GET /api/orders/ord-{N}`. Rate is configurable via `REQUESTS_PER_SECOND` (default 1).
+Every tick (default 1 req/sec, configurable via `REQUESTS_PER_SECOND`), loadgen picks one of two actions:
+
+- **~70% POST `/api/orders`** with a SKU + quantity. ~95% of the time the SKU is drawn from inventory's seeded list (`SKU-A100`, `SKU-B200`, `SKU-C300`) so the request actually succeeds; the remaining ~5% sends a random `widget-N` SKU that inventory doesn't know, producing a natural `unknown_sku` error. The mix is deliberate: a clean-enough baseline that injected faults stand out, but not so clean that the data looks fake.
+- **~30% GET `/api/orders/ord-{N}`** with a random order id. Orders' `GET` is intentionally synthetic; it just echoes the id back, so these requests always succeed.
+
+Loadgen emits its own OTel spans (`service.name=loadgen`) as the root of each trace, so in Honeycomb you'll see complete request traces that begin at loadgen and propagate through `gateway → orders → inventory`.
+
+> **Known coupling.** Loadgen's `KNOWN_SKUS` constant has to match inventory's seed data manually, but there's no enforcement. Deliberate for now; the planned follow-up is either to drive both from one env var or to have loadgen discover SKUs from inventory at startup.
+
+## Triggering faults for demo scenarios
+
+The agent we're building investigates incidents. To rehearse against it, we need incidents on demand. The opt-in fault-injection layer is how we get that. See **[docs/fault-injection.md](docs/fault-injection.md)**
 
 ## What's coming
 
