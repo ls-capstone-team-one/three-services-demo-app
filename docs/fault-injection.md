@@ -74,15 +74,16 @@ For each scenario, run loadgen continuously for clean baseline traffic and, in a
 window).
 
 ```bash
-# 2-minute window of inventory deep-hop latency on top of loadgen baseline
-end=$((SECONDS + 120))
+# 5-minute window of inventory deep-hop latency on top of loadgen baseline.
+# Each curl naturally blocks ~5s waiting for orders' timeout, so the loop
+# self-paces — no `sleep` needed. Yields ~60 faulted requests over 5 minutes.
+end=$((SECONDS + 300))
 while [ $SECONDS -lt $end ]; do
   curl -s -o /dev/null \
     -X POST http://localhost:3000/api/orders \
     -H "Content-Type: application/json" \
     -H "x-fault-inject: inventory:latency=8000" \
     -d '{"sku":"SKU-A100","quantity":1}'
-  sleep 1
 done
 ```
 
