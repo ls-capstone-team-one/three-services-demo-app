@@ -6,8 +6,8 @@ const BAGGAGE_KEY = "fault.inject";
 const ENABLED = process.env.FAULT_INJECTION_ENABLED === "true";
 
 type FaultSpec =
-  | { mode: "latency"; valueMs: number }
-  | { mode: "error"; status: number };
+  | { target: string; mode: "latency"; valueMs: number }
+  | { target: string; mode: "error"; status: number };
 
 function parseSpec(raw: string): FaultSpec | null {
   // expected format: "<target>:<mode>=<value>"
@@ -15,7 +15,6 @@ function parseSpec(raw: string): FaultSpec | null {
   if (colon === -1) return null;
   const target = raw.slice(0, colon);
   const rest = raw.slice(colon + 1);
-  if (target !== SERVICE_NAME) return null;
 
   const eq = rest.indexOf("=");
   if (eq === -1) return null;
@@ -25,12 +24,12 @@ function parseSpec(raw: string): FaultSpec | null {
   if (mode === "latency") {
     const ms = Number(value);
     if (!Number.isFinite(ms) || ms < 0) return null;
-    return { mode: "latency", valueMs: ms };
+    return { target, mode: "latency", valueMs: ms };
   }
   if (mode === "error") {
     const status = Number(value);
     if (!Number.isInteger(status) || status < 100 || status > 599) return null;
-    return { mode: "error", status };
+    return { target, mode: "error", status };
   }
   return null;
 }
@@ -45,6 +44,9 @@ function readSpec(): { spec: FaultSpec; raw: string } | null {
   if (!spec) {
     console.warn(`faultInjection: could not parse spec "${entry.value}"`);
     return null;
+  }
+  if (spec.target !== SERVICE_NAME) {
+    return null; // valid spec, just not for us — silent skip
   }
   return { spec, raw: entry.value };
 }

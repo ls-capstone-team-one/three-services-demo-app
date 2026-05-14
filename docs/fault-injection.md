@@ -74,17 +74,20 @@ For each scenario, run loadgen continuously for clean baseline traffic and, in a
 window).
 
 ```bash
-# 2-minute window of inventory deep-hop latency on top of loadgen baseline
-end=$((SECONDS + 120))
+# 5-minute window of inventory deep-hop latency on top of loadgen baseline.
+# Each curl naturally blocks ~5s waiting for orders' timeout, so the loop
+# self-paces — no `sleep` needed. Yields ~60 faulted requests over 5 minutes.
+end=$((SECONDS + 300))
 while [ $SECONDS -lt $end ]; do
   curl -s -o /dev/null \
     -X POST http://localhost:3000/api/orders \
     -H "Content-Type: application/json" \
     -H "x-fault-inject: inventory:latency=8000" \
     -d '{"sku":"SKU-A100","quantity":1}'
-  sleep 1
 done
 ```
+
+> **Loop pacing.** This loop self-paces only for scenario A — each curl blocks ~5s waiting for orders' timeout to fire. For scenarios that return quickly (`orders:error=503`, `inventory:error=500`, `gateway:latency=500`), add an explicit `sleep 5` inside the loop so request volume stays in the same ballpark (~60 faulted events per window) across scenarios. Otherwise B and D will fire thousands of requests and you lose the comparable-population property BubbleUp depends on.
 
 Run one scenario per window, rotate scenarios across windows. Don't mix two different specs into the same window — the agent's first evaluation is "find the bug," and two concurrent bugs cascading into each other gives the investigation two valid answers, which you can't grade against.
 
