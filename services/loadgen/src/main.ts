@@ -1,6 +1,9 @@
 import "./infra/telemetry";
 import { shutdownTelemetry } from "./infra/telemetry";
 
+const KNOWN_SKUS = ["SKU-A100", "SKU-B200", "SKU-C300"];
+const UNKNOWN_SKU_RATE = 0.05; // ~5% organic noise so baseline isn't unrealistically clean
+
 function readEnvInt(name: string, defaultValue: number): number {
   const raw = process.env[name];
   if (raw === undefined || raw === "") return defaultValue;
@@ -27,7 +30,10 @@ const requestTimeoutMs = 10_000;
 console.log(`loadgen targeting ${gatewayUrl} at ${rps} req/s`);
 
 function postOrder(): void {
-  const sku = `widget-${Math.floor(Math.random() * 100)}`;
+  const sku =
+    Math.random() < UNKNOWN_SKU_RATE
+      ? `widget-${Math.floor(Math.random() * 100)}`
+      : KNOWN_SKUS[Math.floor(Math.random() * KNOWN_SKUS.length)];
   const quantity = Math.floor(Math.random() * 5) + 1;
   fetch(`${gatewayUrl}/api/orders`, {
     method: "POST",
