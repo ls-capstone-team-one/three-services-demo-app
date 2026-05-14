@@ -87,6 +87,8 @@ while [ $SECONDS -lt $end ]; do
 done
 ```
 
+> **Loop pacing.** This loop self-paces only for scenario A — each curl blocks ~5s waiting for orders' timeout to fire. For scenarios that return quickly (`orders:error=503`, `inventory:error=500`, `gateway:latency=500`), add an explicit `sleep 5` inside the loop so request volume stays in the same ballpark (~60 faulted events per window) across scenarios. Otherwise B and D will fire thousands of requests and you lose the comparable-population property BubbleUp depends on.
+
 Run one scenario per window, rotate scenarios across windows. Don't mix two different specs into the same window — the agent's first evaluation is "find the bug," and two concurrent bugs cascading into each other gives the investigation two valid answers, which you can't grade against.
 
 Suggested rotation for a first round of agent evaluation:
